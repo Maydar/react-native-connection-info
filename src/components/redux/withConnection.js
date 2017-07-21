@@ -1,5 +1,6 @@
+/* eslint-disable */
 import React from 'react';
-import { NetInfo } from 'react-native';
+import { NetInfo, Platform } from 'react-native';
 import { connect } from 'react-redux';
 import { connectionShape } from '../../shapes';
 
@@ -11,6 +12,19 @@ const withConnection = ComposedComponent => class extends React.Component {
     };
     this.handleIsConnected = this.handleIsConnected.bind(this);
   }
+
+  isNetworkConnected = () => {
+    if (Platform.OS === 'ios') {
+      return new Promise(resolve => {
+        const handleFirstConnectivityChangeIOS = isConnected => {
+          NetInfo.isConnected.removeEventListener('change', handleFirstConnectivityChangeIOS);
+          resolve(isConnected);
+        };
+        NetInfo.isConnected.addEventListener('change', handleFirstConnectivityChangeIOS);
+      });
+    }
+    return NetInfo.isConnected.fetch();
+  };
 
   componentDidMount() {
     NetInfo.isConnected.fetch().then(isConnected => {
